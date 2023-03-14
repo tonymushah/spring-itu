@@ -4,8 +4,10 @@
  */
 package etu001844.framework.servlet;
 
+import etu001844.framework.Mapping;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,7 +20,15 @@ import javax.servlet.http.HttpServletResponse;
  */
 @WebServlet(name = "FrontServlet", urlPatterns = {"/*"})
 public class FrontServlet extends HttpServlet {
+    private HashMap<String, Mapping> mappingURLs;
 
+    public HashMap<String, Mapping> getMappingURLs() {
+        return mappingURLs;
+    }
+
+    public void setMappingURLs(HashMap<String, Mapping> mappingURLs) {
+        this.mappingURLs = mappingURLs;
+    }
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
