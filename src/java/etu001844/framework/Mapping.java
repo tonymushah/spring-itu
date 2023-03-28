@@ -4,6 +4,7 @@
  */
 package etu001844.framework;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -28,6 +29,23 @@ public class Mapping {
 
     public void setMappedMethod(Method mappedMethod) {
         this.mappedMethod = mappedMethod;
+    }
+
+    public Mapping(Class<? extends Object> mappedClass, Method mappedMethod) {
+        this.setMappedClass(mappedClass);
+        this.setMappedMethod(mappedMethod);
+    }
+
+    public Mapping() {
+    }
+    public Object invokeMethod() throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException{
+        Object mappedClassInstance = this.mappedClass.getConstructor(null).newInstance(null);
+        return this.mappedMethod.invoke(mappedClassInstance, null);
+    }
+
+    @Override
+    public String toString() {
+        return "(" + this.mappedClass.getName() + "," + this.mappedMethod.getName() + ")";
     }
     
 }
