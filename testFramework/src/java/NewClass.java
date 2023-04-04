@@ -1,4 +1,5 @@
 
+import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.RequestMapping;
 
 /*
@@ -12,7 +13,7 @@ import etu001844.framework.bind.annotations.RequestMapping;
  */
 public class NewClass {
     @RequestMapping(url = "/emp-all")
-    public void emp(){
-    
+    public ModelView emp(){
+        return new ModelView("/newjsp.jsp");
     }
 }

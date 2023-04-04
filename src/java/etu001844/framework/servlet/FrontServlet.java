@@ -5,15 +5,19 @@
 package etu001844.framework.servlet;
 
 import etu001844.framework.Mapping;
+import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.AbstractFrontServlet;
 import etu001844.framework.bind.annotations.Controller;
 import etu001844.framework.bind.annotations.RequestMapping;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -24,7 +28,7 @@ import mg.tonymushah.utils.ClassUtils;
  *
  * @author tonymushah
  */
-@WebServlet(name = "FrontServlet", urlPatterns = {"/*"})
+@WebServlet(name = "FrontServlet", urlPatterns = {"*.do"})
 public class FrontServlet extends AbstractFrontServlet {
     private HashMap<String, Mapping> mappingURLs;
 
@@ -41,19 +45,19 @@ public class FrontServlet extends AbstractFrontServlet {
         if (this.mappingURLs == null) {
             this.setMappingURLs(new HashMap<String, Mapping>());
         }
-        System.out.println(this.getServletContext().getClassLoader().resources("controllers").toList().size());
         try {
             HashMap<Method, ArrayList<RequestMapping>> methods;
             methods = ClassUtils.findAllMethodOfPackageByClassAnnotation(this.findAllClasses(), RequestMapping.class);
-            System.out.println(methods.size());
             for (Map.Entry<Method, ArrayList<RequestMapping>> entry : methods.entrySet()) {
                 String url = entry.getValue().get(0).url();
-                Class<?> mappingClass = entry.getKey().getDeclaringClass();
-                if (mappingClass.isAnnotationPresent(Controller.class)) {
-                    url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
+                if(entry.getKey().getReturnType() == ModelView.class){
+                    Class<?> mappingClass = entry.getKey().getDeclaringClass();
+                    if (mappingClass.isAnnotationPresent(Controller.class)) {
+                        url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
+                    }
+                    Mapping mappingUrl = new Mapping(mappingClass, entry.getKey());
+                    this.mappingURLs.put(url, mappingUrl);
                 }
-                Mapping mappingUrl = new Mapping(mappingClass, entry.getKey());
-                this.mappingURLs.put(url, mappingUrl);
             }
         } catch (ClassNotFoundException ex) {
             throw new ServletException(ex.getMessage(), ex.getCause());  
@@ -72,24 +76,35 @@ public class FrontServlet extends AbstractFrontServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        response.setContentType("text/html;charset=UTF-8");
-        try (PrintWriter out = response.getWriter()) {
-            /* TODO output your page here. You may use following sample code. */
-            out.println("<!DOCTYPE html>");
-            out.println("<html>");
-            out.println("<head>");
-            out.println("<title>Servlet FrontServlet</title>");
-            out.println("</head>");
-            out.println("<body>");
-            out.println("<h1>Servlet FrontServlet at " + request.getContextPath() + "</h1>");
-            out.println("<ul>");
-            for (Map.Entry<String, Mapping> urls : this.mappingURLs.entrySet()) {
-                out.println(String.format("<li>%s : %s</li>", urls.getKey(), urls.getValue().toString()));
+        String pathInfo = request.getServletPath();
+        Mapping to_use = null;
+        if(pathInfo != null){
+            System.out.println(pathInfo);
+            to_use = this.getMappingURLs().get(pathInfo.replaceFirst(".do", ""));
+            
+            try {    
+                if(to_use != null){
+                    Object instance = to_use.getMappedClass().getConstructor().newInstance();
+                    ModelView to_use_of_to_use = (ModelView) to_use.getMappedMethod().invoke(instance);
+                    this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
+                }
+            } catch (NoSuchMethodException ex) {
+                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SecurityException ex) {
+                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InstantiationException ex) {
+                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IllegalArgumentException ex) {
+                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InvocationTargetException ex) {
+                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
-            out.println("</ul>");
-            out.println("</body>");
-            out.println("</html>");
+        }else{
+            throw new ServletException(String.format("Method not found for url %s", pathInfo));
         }
+        
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
