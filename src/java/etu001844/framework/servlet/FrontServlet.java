@@ -5,6 +5,7 @@
 package etu001844.framework.servlet;
 
 import etu001844.framework.Mapping;
+import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.AbstractFrontServlet;
 import etu001844.framework.bind.annotations.Controller;
 import etu001844.framework.bind.annotations.RequestMapping;
@@ -45,15 +46,16 @@ public class FrontServlet extends AbstractFrontServlet {
         try {
             HashMap<Method, ArrayList<RequestMapping>> methods;
             methods = ClassUtils.findAllMethodOfPackageByClassAnnotation(this.findAllClasses(), RequestMapping.class);
-            System.out.println(methods.size());
             for (Map.Entry<Method, ArrayList<RequestMapping>> entry : methods.entrySet()) {
                 String url = entry.getValue().get(0).url();
-                Class<?> mappingClass = entry.getKey().getDeclaringClass();
-                if (mappingClass.isAnnotationPresent(Controller.class)) {
-                    url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
+                if(entry.getKey().getReturnType() == ModelView.class){
+                    Class<?> mappingClass = entry.getKey().getDeclaringClass();
+                    if (mappingClass.isAnnotationPresent(Controller.class)) {
+                        url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
+                    }
+                    Mapping mappingUrl = new Mapping(mappingClass, entry.getKey());
+                    this.mappingURLs.put(url, mappingUrl);
                 }
-                Mapping mappingUrl = new Mapping(mappingClass, entry.getKey());
-                this.mappingURLs.put(url, mappingUrl);
             }
         } catch (ClassNotFoundException ex) {
             throw new ServletException(ex.getMessage(), ex.getCause());  
