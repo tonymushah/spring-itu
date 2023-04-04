@@ -9,21 +9,21 @@ package etu001844.framework;
  * @author tonymushah
  */
 public class ModelView {
-    private String view;
+    private String url;
 
-    public String getView() {
-        return view;
+    public String getUrl() {
+        return url;
     }
 
-    public void setView(String view) {
-        this.view = view;
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    public ModelView(String url) {
+        this.setUrl(url);
     }
 
     public ModelView() {
-    }
-
-    public ModelView(String view) {
-        this.setView(view);
     }
     
 }
