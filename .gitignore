@@ -1,1 +1,4 @@
 /build/
+/dist/
+/testFramework/nbproject/private/
+/testFramework/build/
