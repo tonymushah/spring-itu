@@ -1,6 +1,7 @@
 
 import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.RequestMapping;
+import java.util.Arrays;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -14,6 +15,8 @@ import etu001844.framework.bind.annotations.RequestMapping;
 public class NewClass {
     @RequestMapping(url = "/emp-all")
     public ModelView emp(){
-        return new ModelView("/newjsp.jsp");
+        ModelView mv = new ModelView("/newjsp.jsp");
+        mv.put("noms", Arrays.asList("Tony", "Elon", "Jeff"));
+        return mv;
     }
 }
