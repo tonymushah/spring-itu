@@ -86,6 +86,9 @@ public class FrontServlet extends AbstractFrontServlet {
                 if(to_use != null){
                     Object instance = to_use.getMappedClass().getConstructor().newInstance();
                     ModelView to_use_of_to_use = (ModelView) to_use.getMappedMethod().invoke(instance);
+                    for(Map.Entry<String, Object> data : to_use_of_to_use.entrySet()){
+                        request.setAttribute(data.getKey(), data.getValue());
+                    }
                     this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
                 }
             } catch (NoSuchMethodException ex) {
