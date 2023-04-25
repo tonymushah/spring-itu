@@ -4,16 +4,33 @@
  */
 package etu001844.framework.bind.annotations;
 
+import etu001844.framework.Mapping;
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import mg.tonymushah.utils.TCeutils;
 
 /**
  *
  * @author tonymushah
  */
 public abstract class AbstractFrontServlet extends HttpServlet {
+    private HashMap<String, Mapping> mappingURLs;
+
+    public HashMap<String, Mapping> getMappingURLs() {
+        return mappingURLs;
+    }
+
+    public void setMappingURLs(HashMap<String, Mapping> mappingURLs) {
+        this.mappingURLs = mappingURLs;
+    }
     public Set<File> getAllClassFilesInDir(File directory){
         HashSet<File> class_files = new HashSet<File>();
         for(File file : directory.listFiles()){
@@ -54,5 +71,29 @@ public abstract class AbstractFrontServlet extends HttpServlet {
             returns.add(this.extract_class_from_file(file, root));
         }
         return returns;
+    }
+    public Mapping getRequestMapping(HttpServletRequest request) throws ServletException{
+        String pathInfo = request.getServletPath();
+        if(pathInfo != null){
+            return this.getMappingURLs().get(pathInfo.replaceFirst(".do", ""));   
+        }else{
+            throw new ServletException(String.format("Method not found for url %s", pathInfo));
+        }
+        
+    }
+    public Object init_mapped_class(HttpServletRequest request, Mapping to_use) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+        Object instance = to_use.getMappedClass().getConstructor().newInstance();
+        TCeutils instance_u = new TCeutils(instance);
+        Enumeration<String> attributeNames = request.getAttributeNames();
+        Map<String, String[]> params = request.getParameterMap();
+        for(Map.Entry<String, String[]> param : params.entrySet()){
+            System.out.println(String.format("%s : %s", param.getKey(), param.getValue()[0]));
+            try{
+                instance_u.setInField(param.getKey(), param.getValue()[0]);
+            }catch(NoSuchFieldError e){
+                System.out.println(e.getMessage());
+            }
+        }
+        return instance;
     }
 }

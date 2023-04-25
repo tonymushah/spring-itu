@@ -30,19 +30,10 @@ import mg.tonymushah.utils.ClassUtils;
  */
 @WebServlet(name = "FrontServlet", urlPatterns = {"*.do"})
 public class FrontServlet extends AbstractFrontServlet {
-    private HashMap<String, Mapping> mappingURLs;
-
-    public HashMap<String, Mapping> getMappingURLs() {
-        return mappingURLs;
-    }
-
-    public void setMappingURLs(HashMap<String, Mapping> mappingURLs) {
-        this.mappingURLs = mappingURLs;
-    }
 
     @Override
     public void init() throws ServletException {
-        if (this.mappingURLs == null) {
+        if (this.getMappingURLs() == null) {
             this.setMappingURLs(new HashMap<String, Mapping>());
         }
         try {
@@ -56,7 +47,7 @@ public class FrontServlet extends AbstractFrontServlet {
                         url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
                     }
                     Mapping mappingUrl = new Mapping(mappingClass, entry.getKey());
-                    this.mappingURLs.put(url, mappingUrl);
+                    this.getMappingURLs().put(url, mappingUrl);
                 }
             }
         } catch (ClassNotFoundException ex) {
@@ -76,21 +67,15 @@ public class FrontServlet extends AbstractFrontServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        String pathInfo = request.getServletPath();
-        Mapping to_use = null;
-        if(pathInfo != null){
-            System.out.println(pathInfo);
-            to_use = this.getMappingURLs().get(pathInfo.replaceFirst(".do", ""));
-            
-            try {    
-                if(to_use != null){
-                    Object instance = to_use.getMappedClass().getConstructor().newInstance();
+        Mapping to_use = this.getRequestMapping(request);
+        try {    
+                    Object instance = this.init_mapped_class(request, to_use);
                     ModelView to_use_of_to_use = (ModelView) to_use.getMappedMethod().invoke(instance);
                     for(Map.Entry<String, Object> data : to_use_of_to_use.entrySet()){
                         request.setAttribute(data.getKey(), data.getValue());
                     }
                     this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
-                }
+                
             } catch (NoSuchMethodException ex) {
                 Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
             } catch (SecurityException ex) {
@@ -104,9 +89,6 @@ public class FrontServlet extends AbstractFrontServlet {
             } catch (InvocationTargetException ex) {
                 Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }else{
-            throw new ServletException(String.format("Method not found for url %s", pathInfo));
-        }
         
     }
 
