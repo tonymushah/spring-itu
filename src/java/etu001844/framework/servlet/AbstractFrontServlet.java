@@ -2,9 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package etu001844.framework.bind.annotations;
+package etu001844.framework.servlet;
 
 import etu001844.framework.Mapping;
+import etu001844.framework.ModelView;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Enumeration;
@@ -95,5 +96,10 @@ public abstract class AbstractFrontServlet extends HttpServlet {
             }
         }
         return instance;
+    }
+    public ModelView get_model_view(HttpServletRequest request) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+        Mapping to_use = this.getRequestMapping(request);
+        Object instance = this.init_mapped_class(request, to_use);
+        return (ModelView) to_use.getMappedMethod().invoke(instance);
     }
 }

@@ -6,7 +6,6 @@ package etu001844.framework.servlet;
 
 import etu001844.framework.Mapping;
 import etu001844.framework.ModelView;
-import etu001844.framework.bind.annotations.AbstractFrontServlet;
 import etu001844.framework.bind.annotations.Controller;
 import etu001844.framework.bind.annotations.RequestMapping;
 import java.io.IOException;
@@ -41,7 +40,7 @@ public class FrontServlet extends AbstractFrontServlet {
             methods = ClassUtils.findAllMethodOfPackageByClassAnnotation(this.findAllClasses(), RequestMapping.class);
             for (Map.Entry<Method, ArrayList<RequestMapping>> entry : methods.entrySet()) {
                 String url = entry.getValue().get(0).url();
-                if(entry.getKey().getReturnType() == ModelView.class){
+                if (entry.getKey().getReturnType() == ModelView.class) {
                     Class<?> mappingClass = entry.getKey().getDeclaringClass();
                     if (mappingClass.isAnnotationPresent(Controller.class)) {
                         url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
@@ -51,8 +50,8 @@ public class FrontServlet extends AbstractFrontServlet {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            throw new ServletException(ex.getMessage(), ex.getCause());  
-        }   
+            throw new ServletException(ex.getMessage(), ex.getCause());
+        }
         super.init();
     }
 
@@ -67,29 +66,27 @@ public class FrontServlet extends AbstractFrontServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        Mapping to_use = this.getRequestMapping(request);
-        try {    
-                    Object instance = this.init_mapped_class(request, to_use);
-                    ModelView to_use_of_to_use = (ModelView) to_use.getMappedMethod().invoke(instance);
-                    for(Map.Entry<String, Object> data : to_use_of_to_use.entrySet()){
-                        request.setAttribute(data.getKey(), data.getValue());
-                    }
-                    this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
-                
-            } catch (NoSuchMethodException ex) {
-                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (SecurityException ex) {
-                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (InstantiationException ex) {
-                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalAccessException ex) {
-                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IllegalArgumentException ex) {
-                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (InvocationTargetException ex) {
-                Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        try {
+            ModelView to_use_of_to_use = this.get_model_view(request);
+            for (Map.Entry<String, Object> data : to_use_of_to_use.entrySet()) {
+                request.setAttribute(data.getKey(), data.getValue());
             }
-        
+            this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
+
+        } catch (NoSuchMethodException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SecurityException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InstantiationException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalAccessException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IllegalArgumentException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InvocationTargetException ex) {
+            Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
     }
 
     // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
