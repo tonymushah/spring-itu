@@ -7,9 +7,13 @@ import java.nio.*;
 import java.util.*;
 
 import mg.tonymushah.utils.class_t_file.ArClass_File;
+import mg.tonymushah.utils.enums.PrimaryClasses;
 import mg.tonymushah.utils.file_t_class.ArFile_Class;
 
 public class TUtils {
+    public static PrimaryClasses getPrimaryClass(Class<?> to_evaluate){
+        return PrimaryClasses.getPrimaryClass(to_evaluate);
+    }
     public static String whoami(Object object){
         String returns = "";
         returns = object.getClass().getName();
@@ -362,6 +366,7 @@ public class TUtils {
         }
 
     }
+   
     public static<T extends Object> boolean isBasicClasses(T to_use) {
         for (String basic_classe : basic_classic()) {
             if(to_use.getClass().getName().compareTo(basic_classe) == 0){

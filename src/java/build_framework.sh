@@ -1,6 +1,6 @@
 #!/bin/bash
 
-class_path=".:/home/tonymushah/Tony_Prog/project/spring-itu/apache-tomcat-9.0.70/lib/*:/home/tonymushah/Tony_Prog/project/spring-itu/repository/spring-itu/lib/Reflections/*"
+class_path="."
 output_dir="to_jar"
 output_jar_fileName="myFramework.jar"
 testFrameworkPath="../../testFramework"
