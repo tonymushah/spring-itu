@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import mg.tonymushah.utils.TCeutils;
 import mg.tonymushah.utils.TUtils;
+import mg.tonymushah.utils.bind.annotation.MethodParam;
 import mg.tonymushah.utils.enums.PrimaryClasses;
 
 /**
@@ -28,6 +29,18 @@ import mg.tonymushah.utils.enums.PrimaryClasses;
  */
 public abstract class AbstractFrontServlet extends HttpServlet {
 
+    private HashMap<String, Parameter> get_method_param(Method to_use) {
+        HashMap<String, Parameter> result = new HashMap();
+        for (Parameter param : to_use.getParameters()) {
+            MethodParam p = param.getDeclaredAnnotation(MethodParam.class);
+            if (p != null) {
+                result.put(p.name(), param);
+            } else {
+                result.put(param.getName(), param);
+            }
+        }
+        return result;
+    }
     private HashMap<String, Mapping> mappingURLs;
 
     public HashMap<String, Mapping> getMappingURLs() {
@@ -112,47 +125,54 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         }
         return instance;
     }
+
     // TODO Test 
     public ModelView invoke_method(Object instance, Method mappedMethod, HttpServletRequest request) throws IllegalAccessException, InvocationTargetException {
         HashMap<Parameter, Object> parameterValue = new HashMap();
-        for (Parameter param : mappedMethod.getParameters()) {
-            String[] request_parameter_value = request.getParameterValues(param.getName());
+        HashMap<String, Parameter> methodParam = this.get_method_param(mappedMethod);
+        for (Map.Entry<String, Parameter> param : methodParam.entrySet()) {
+            System.out.println(param.getKey());
+            String[] request_parameter_value = request.getParameterValues(param.getKey());
             if (request_parameter_value != null) {
                 if (request_parameter_value.length == 1) {
-                    switch (PrimaryClasses.getPrimaryClass(param.getType())) {
-                        case Integer:
-                            parameterValue.put(param, Integer.valueOf(request_parameter_value[0]).intValue());
-                            break;
-                        case Boolean:
-                            parameterValue.put(param, Boolean.valueOf(request_parameter_value[0]).booleanValue());
-                            break;
-                        case Float:
-                            parameterValue.put(param, Float.valueOf(request_parameter_value[0]).floatValue());
-                            break;
-                        case Double:
-                            parameterValue.put(param, Double.valueOf(request_parameter_value[0]).doubleValue());
-                            break;
-                        case Long:
-                            parameterValue.put(param, Long.valueOf(request_parameter_value[0]).longValue());
-                            break;
-                        case Short:
-                            parameterValue.put(param, Short.valueOf(request_parameter_value[0]).shortValue());
-                            break;
-                        default:
-
-                            break;
+                    PrimaryClasses primaryClass = PrimaryClasses.getPrimaryClass(param.getValue().getType());
+                    if (primaryClass != null) {
+                        switch (primaryClass) {
+                            case Integer:
+                                parameterValue.put(param.getValue(), Integer.valueOf(request_parameter_value[0]).intValue());
+                                break;
+                            case Boolean:
+                                parameterValue.put(param.getValue(), Boolean.valueOf(request_parameter_value[0]).booleanValue());
+                                break;
+                            case Float:
+                                parameterValue.put(param.getValue(), Float.valueOf(request_parameter_value[0]).floatValue());
+                                break;
+                            case Double:
+                                parameterValue.put(param.getValue(), Double.valueOf(request_parameter_value[0]).doubleValue());
+                                break;
+                            case Long:
+                                parameterValue.put(param.getValue(), Long.valueOf(request_parameter_value[0]).longValue());
+                                break;
+                            case Short:
+                                parameterValue.put(param.getValue(), Short.valueOf(request_parameter_value[0]).shortValue());
+                                break;
+                            default:
+                                parameterValue.put(param.getValue(), request_parameter_value[0]);
+                                break;
+                        }
+                    }else{
+                        parameterValue.put(param.getValue(), request_parameter_value[0]);
                     }
-
                 } else {
-                    if (param.getType() == String.class.arrayType()) {
-                        parameterValue.put(param, request_parameter_value);
+                    if (param.getValue().getType() == String.class.arrayType()) {
+                        parameterValue.put(param.getValue(), request_parameter_value);
                     }
                 }
-            }else{
-                if(param.getType().isPrimitive()){
-                    parameterValue.put(param, 0);
-                }else{
-                    parameterValue.put(param, null);
+            } else {
+                if (param.getValue().getType().isPrimitive()) {
+                    parameterValue.put(param.getValue(), 0);
+                } else {
+                    parameterValue.put(param.getValue(), null);
                 }
             }
         }
@@ -162,7 +182,7 @@ public abstract class AbstractFrontServlet extends HttpServlet {
     public ModelView get_model_view(HttpServletRequest request) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Mapping to_use = this.getRequestMapping(request);
         Object instance = this.init_mapped_class(request, to_use);
-
-        return (ModelView) to_use.getMappedMethod().invoke(instance);
+        return this.invoke_method(instance, to_use.getMappedMethod(), request);
+        //return (ModelView) to_use.getMappedMethod().invoke(instance);
     }
 }

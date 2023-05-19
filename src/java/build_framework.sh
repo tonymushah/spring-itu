@@ -17,4 +17,5 @@ if [ -e $testFrameworkPath ]
 then
 	rm $testFrameworkPath/lib/$output_jar_fileName
 fi
+cp ./$output_jar_fileName ../../workflows/build-releases/
 mv ./$output_jar_fileName $testFrameworkPath/lib

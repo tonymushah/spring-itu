@@ -58,6 +58,7 @@ public enum PrimaryClasses {
     }
    
     public static PrimaryClasses getPrimaryClass(Class<?> to_evaluate){
+        System.out.println(to_evaluate);
         for(PrimaryClasses comp : PrimaryClasses.values()){
             if(comp.getPrimitiveClass() == to_evaluate){
                 return comp;
