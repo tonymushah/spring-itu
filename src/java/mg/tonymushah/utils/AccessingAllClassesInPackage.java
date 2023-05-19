@@ -13,15 +13,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import mg.tonymushah.utils.exceptions.PackageNotFoundException;
-import org.reflections.Reflections;
 
 public class AccessingAllClassesInPackage {
   
   public static Set<Class<?>> findAllClasses(String packageName) throws PackageNotFoundException{
-    Reflections ref = new Reflections(packageName);
-    return ref.getSubTypesOf(Object.class)
-            .stream()
-            .collect(Collectors.toSet());
+      return AccessingAllClassesInPackage.findAllClassesWithClassLoader(packageName, ClassLoader.getSystemClassLoader());
   }
   public static Set<Class<?>> findAllClassesWithClassLoader(String packageName, ClassLoader loader) throws PackageNotFoundException{
     try {

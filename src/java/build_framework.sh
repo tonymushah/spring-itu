@@ -1,8 +1,8 @@
 #!/bin/bash
 
-class_path=".:/home/tonymushah/Tony_Prog/project/spring-itu/apache-tomcat-9.0.70/lib/*:/home/tonymushah/Tony_Prog/project/spring-itu/repository/spring-itu/lib/Reflections/*"
+class_path=".:/home/tonymushah/Tony_Prog/project/spring-itu/apache-tomcat-9.0.70/lib/*"
 output_dir="to_jar"
-output_jar_fileName="myFramework.jar"
+output_jar_fileName="etu001844_spring_framework.jar"
 testFrameworkPath="../../testFramework"
 
 echo "class_path = $class_path"
@@ -17,4 +17,5 @@ if [ -e $testFrameworkPath ]
 then
 	rm $testFrameworkPath/lib/$output_jar_fileName
 fi
+cp ./$output_jar_fileName ../../workflows/build-releases/
 mv ./$output_jar_fileName $testFrameworkPath/lib
