@@ -1,9 +1,9 @@
 package models;
 
 
+import etu001844.framework.FileUpload;
 import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.RequestMapping;
-import mg.tonymushah.utils.bind.annotation.MethodParam;
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -16,7 +16,16 @@ import mg.tonymushah.utils.bind.annotation.MethodParam;
  */
 public class Employee {
     private String name;
+    private FileUpload file;
 
+    public FileUpload getFile() {
+        return file;
+    }
+
+    public void setFile(FileUpload file) {
+        this.file = file;
+    }
+    
     public String getName() {
         return name;
     }
@@ -26,8 +35,7 @@ public class Employee {
     }
     
     @RequestMapping(url = "/insert_emp")
-    public ModelView getSubmited(@MethodParam(name = "name") String name){
-        System.out.println(name);
+    public ModelView getSubmited(){
         ModelView mv = new ModelView("/display_emp.jsp");
         mv.put("data", this);
         return mv;

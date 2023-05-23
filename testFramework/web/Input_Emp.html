@@ -11,8 +11,11 @@ Click nbfs://nbhost/SystemFileSystem/Templates/JSP_Servlet/Html.html to edit thi
     </head>
     <body>
         <div>TODO write content</div>
-        <form action="insert_emp.do" method="POST">
+        <form action="insert_emp.do" method="POST" enctype="multipart/form-data">
             <input type="text" name="name" placeholder="Name"/>
+            <br/>
+            <input type="file" name="file"/>
+            <br/>
             <input type="submit" value="Submit" />
         </form>
     </body>

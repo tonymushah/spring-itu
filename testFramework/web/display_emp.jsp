@@ -4,6 +4,7 @@
     Author     : tonymushah
 --%>
 <%@page  import="models.Employee"%>
+<%@page  import="etu001844.framework.FileUpload"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html>
@@ -17,5 +18,6 @@
             Employee data = (Employee) request.getAttribute("data");
         %>
         <h2>Name : <%= data.getName() %></h2>
+        <h2>Filename : <%= data.getFile() %></h2>
     </body>
 </html>
