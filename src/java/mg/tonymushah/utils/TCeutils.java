@@ -1,5 +1,6 @@
 package mg.tonymushah.utils;
 
+import java.io.InvalidClassException;
 import java.lang.reflect.*;
 
 import mg.tonymushah.utils.class_t_file.ArClass_File;
@@ -106,6 +107,13 @@ public class TCeutils<T extends Object> {
             throw new NoSuchFieldError("No field named " + name + " in the class " + this.to_use.getClass().getName());
         }
         
+    }
+    public void setInField(Field field, Object value) throws InvalidClassException{
+        if(field.getDeclaringClass().isAssignableFrom(this.to_use.getClass())){
+            TUtils.setinField(to_use, value, field);
+        }else{
+            throw new InvalidClassException(String.format("the field %s is not from class %s", field.toString(), this.to_use.getClass().toString()));
+        }
     }
 
     public void setInNField(int id, Object value){

@@ -4,9 +4,12 @@
  */
 package etu001844.framework.servlet;
 
+import etu001844.framework.FileUpload;
 import etu001844.framework.Mapping;
 import etu001844.framework.ModelView;
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -18,6 +21,7 @@ import java.util.Set;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.Part;
 import mg.tonymushah.utils.TCeutils;
 import mg.tonymushah.utils.TUtils;
 import mg.tonymushah.utils.bind.annotation.MethodParam;
@@ -105,14 +109,17 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         }
 
     }
-
-    public Object init_mapped_class(HttpServletRequest request, Mapping to_use) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        Object instance = to_use.getMappedClass().getConstructor().newInstance();
-        TCeutils instance_u = new TCeutils(instance);
-        Enumeration<String> attributeNames = request.getAttributeNames();
+    public FileUpload get_file_upload_in_request(HttpServletRequest request, String name) throws IOException, ServletException{
+        Part filePart = request.getPart(name);
+        if(filePart == null){
+            return null;
+        }
+        String fileName = filePart.getSubmittedFileName();
+        return new FileUpload(fileName, filePart.getInputStream());
+    }
+    private void init_mapped_class_with_parameter(HttpServletRequest request, TCeutils instance_u){
         Map<String, String[]> params = request.getParameterMap();
         for (Map.Entry<String, String[]> param : params.entrySet()) {
-            System.out.println(String.format("%s : %s", param.getKey(), param.getValue()[0]));
             try {
                 if (instance_u.getFields()[(instance_u.getFieldIndex(param.getKey()))].getType() == String.class.arrayType()) {
                     instance_u.setInField(param.getKey(), param.getValue());
@@ -123,6 +130,26 @@ public abstract class AbstractFrontServlet extends HttpServlet {
                 System.out.println(e.getMessage());
             }
         }
+    }
+    private Set<String> get_fileUpload_attributes(TCeutils instance_u){
+        HashSet<String> names = new HashSet<String>();
+        for(Field field : instance_u.getFields()){
+            if(field.getType().isNestmateOf(FileUpload.class)){
+                names.add(field.getName());
+            }
+        }
+        return names;
+    }
+    public void init_mapped_class_with_file_upload(HttpServletRequest request, TCeutils instance_u) throws IOException, ServletException{
+        for(String name : this.get_fileUpload_attributes(instance_u)){
+            instance_u.setInField(name, this.get_file_upload_in_request(request, name));
+        }
+    }
+    public Object init_mapped_class(HttpServletRequest request, Mapping to_use) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException, ServletException {
+        Object instance = to_use.getMappedClass().getConstructor().newInstance();
+        TCeutils instance_u = new TCeutils(instance);
+        this.init_mapped_class_with_parameter(request, instance_u);
+        this.init_mapped_class_with_file_upload(request, instance_u);
         return instance;
     }
 
@@ -179,7 +206,7 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         return (ModelView) mappedMethod.invoke(instance, parameterValue.values().toArray());
     }
 
-    public ModelView get_model_view(HttpServletRequest request) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    public ModelView get_model_view(HttpServletRequest request) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, IOException {
         Mapping to_use = this.getRequestMapping(request);
         Object instance = this.init_mapped_class(request, to_use);
         return this.invoke_method(instance, to_use.getMappedMethod(), request);

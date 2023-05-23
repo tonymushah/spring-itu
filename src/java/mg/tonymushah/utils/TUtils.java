@@ -323,7 +323,7 @@ public class TUtils {
     public static<T extends Object, V extends Object> void setinField(T to_use, V value, Field to_take){
         try {
             to_take.setAccessible(true);
-            if(to_take.getType().isAssignableFrom(value.getClass())){
+            if(value.getClass().isAssignableFrom(to_take.getType())){
                 to_take.set(to_use, value);
             }else{
                 for (int i = 0; i < basic_classes().length; i++) {
