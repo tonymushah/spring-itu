@@ -17,5 +17,6 @@
             Employee data = (Employee) request.getAttribute("data");
         %>
         <h2>Name : <%= data.getName() %></h2>
+        <h2>Other : <%= data.getDsdsd() %></h2>
     </body>
 </html>

@@ -32,6 +32,7 @@ public class FrontServlet extends AbstractFrontServlet {
 
     @Override
     public void init() throws ServletException {
+        super.init();
         if (this.getMappingURLs() == null) {
             this.setMappingURLs(new HashMap<String, Mapping>());
         }
