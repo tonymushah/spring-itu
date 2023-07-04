@@ -24,6 +24,7 @@ import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import mg.tonymushah.utils.TCeutils;
 import mg.tonymushah.utils.bind.annotation.MethodParam;
@@ -44,48 +45,56 @@ public abstract class AbstractFrontServlet extends HttpServlet {
     public void setSingletons_object(HashMap<Class<?>, Object> singletons_object) {
         this.singletons_object = singletons_object;
     }
-    public boolean isSingleton_via_annotation(Class<?> class_){
+
+    public boolean isSingleton_via_annotation(Class<?> class_) {
         Scope class_scope = class_.getAnnotation(Scope.class);
-        if(class_scope != null){
+        if (class_scope != null) {
             return class_scope.value() == ScopeValue.Singleton;
-        }else{
+        } else {
             return false;
         }
     }
-    public Set<Class<?>> search_singleton_classes(Set<Class<?>> class_set){
+
+    public Set<Class<?>> search_singleton_classes(Set<Class<?>> class_set) {
         HashSet<Class<?>> returns = new HashSet();
-        for(Class<?> class_ : class_set){
-            if(this.isSingleton_via_annotation(class_)) returns.add(class_);
+        for (Class<?> class_ : class_set) {
+            if (this.isSingleton_via_annotation(class_)) {
+                returns.add(class_);
+            }
         }
         return returns;
     }
-    private boolean isClassInSingletonMapping(Class<?> class_){
-        if(this.isSingleton_via_annotation(class_)){
+
+    private boolean isClassInSingletonMapping(Class<?> class_) {
+        if (this.isSingleton_via_annotation(class_)) {
             return this.singletons_object.get(class_) != null;
-        }else{
+        } else {
             return false;
         }
     }
-    private boolean isClassInSingletonMapping(Class<?> class_, HashMap<Class<?>, Object> storage){
-        if(this.isSingleton_via_annotation(class_)){
+
+    private boolean isClassInSingletonMapping(Class<?> class_, HashMap<Class<?>, Object> storage) {
+        if (this.isSingleton_via_annotation(class_)) {
             return storage.get(class_) != null;
-        }else{
+        } else {
             return false;
         }
     }
-    public void init_singleton_set(Set<Class<?>> classes, HashMap<Class<?>, Object> storage) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        for(Class<?> class_ : classes){
-            if(this.isSingleton_via_annotation(class_)){
+
+    public void init_singleton_set(Set<Class<?>> classes, HashMap<Class<?>, Object> storage) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        for (Class<?> class_ : classes) {
+            if (this.isSingleton_via_annotation(class_)) {
                 storage.put(class_, class_.getConstructor().newInstance());
             }
         }
     }
-    
-    public void init_singletons() throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+
+    public void init_singletons() throws ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         HashMap<Class<?>, Object> storage = new HashMap();
         this.init_singleton_set(this.findAllClasses(), storage);
         this.setSingletons_object(storage);
     }
+
     private HashMap<String, Parameter> get_method_param(Method to_use) {
         HashMap<String, Parameter> result = new HashMap();
         for (Parameter param : to_use.getParameters()) {
@@ -162,15 +171,15 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         }
 
     }
-    
-    protected Object get_or_init_object(Mapping to_use) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
-        if(this.isClassInSingletonMapping(to_use.getMappedClass())){
+
+    protected Object get_or_init_object(Mapping to_use) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+        if (this.isClassInSingletonMapping(to_use.getMappedClass())) {
             return this.singletons_object.get(to_use.getMappedClass());
-        }else{
+        } else {
             return to_use.getMappedClass().getConstructor().newInstance();
         }
     }
-    
+
     public Object init_mapped_class(HttpServletRequest request, Mapping to_use) throws NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Object instance = this.get_or_init_object(to_use);
         TCeutils instance_u = new TCeutils(instance);
@@ -178,7 +187,7 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         Map<String, String[]> params = request.getParameterMap();
         for (Map.Entry<String, String[]> param : params.entrySet()) {
             try {
-                if(instance_u.getFields()[instance_u.getFieldIndex(param.getKey())].isAnnotationPresent(SkipMapping.class) == false){
+                if (instance_u.getFields()[instance_u.getFieldIndex(param.getKey())].isAnnotationPresent(SkipMapping.class) == false) {
                     if (instance_u.getFields()[(instance_u.getFieldIndex(param.getKey()))].getType() == String.class.arrayType()) {
                         instance_u.setInField(param.getKey(), param.getValue());
                     } else {
@@ -191,9 +200,20 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         }
         return instance;
     }
-
+    private Object[] get_ordened_args(Method mappedMethod, HashMap<Parameter, Object> hashArgs){
+        Object[] args = new Object[hashArgs.size()];
+        for(Map.Entry<Parameter, Object> arg : hashArgs.entrySet()){
+            double index_ = arg.getKey().hashCode() ^ mappedMethod.hashCode();
+            if(args.length > index_ ){
+                System.out.println(arg.getKey().toString() + " " + index_);
+                int index = (Double.valueOf(index_)).intValue();
+                args[index] = arg.getValue();
+            }
+        }
+        return args;
+    }
     // TODO Test 
-    public ModelView invoke_method(Object instance, Method mappedMethod, HttpServletRequest request) throws IllegalAccessException, InvocationTargetException {
+    public Object invoke_method(Object instance, Method mappedMethod, HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InvocationTargetException {
         HashMap<Parameter, Object> parameterValue = new HashMap();
         HashMap<String, Parameter> methodParam = this.get_method_param(mappedMethod);
         for (Map.Entry<String, Parameter> param : methodParam.entrySet()) {
@@ -226,36 +246,46 @@ public abstract class AbstractFrontServlet extends HttpServlet {
                                 parameterValue.put(param.getValue(), request_parameter_value[0]);
                                 break;
                         }
-                    }else{
+                    } else {
                         parameterValue.put(param.getValue(), request_parameter_value[0]);
                     }
                 } else {
-                    if (param.getValue().getType() == String.class.arrayType()) {
+                    if (String.class.arrayType() == (param.getValue().getType())) {
                         parameterValue.put(param.getValue(), request_parameter_value);
-                    }else if(param.getValue().getType() == HttpSession.class){
-                        if(param.getValue().getType().isAnnotationPresent(CreateIfNull.class)){
-                            parameterValue.put(param.getValue(), request.getSession(true));
-                        }else{
-                            parameterValue.put(param.getValue(), request.getSession());
-                        }
                     }
                 }
             } else {
                 if (param.getValue().getType().isPrimitive()) {
                     parameterValue.put(param.getValue(), 0);
+                } else if (param.getValue().getType() == (HttpSession.class)) {
+                    if (param.getValue().getType().isAnnotationPresent(CreateIfNull.class)) {
+                        parameterValue.put(param.getValue(), request.getSession(true));
+                    } else {
+                        parameterValue.put(param.getValue(), request.getSession());
+                    }
+                } else if (param.getValue().getType() == HttpServletRequest.class) {
+                    parameterValue.put(param.getValue(), request);
+                } else if (param.getValue().getType() == HttpServletResponse.class) {
+                    parameterValue.put(param.getValue(), response);
+                } else if (this.isClassInSingletonMapping(param.getValue().getType())) {
+                    parameterValue.put(param.getValue(), this.getSingletons_object().get(param.getValue().getType()));
                 } else {
                     parameterValue.put(param.getValue(), null);
                 }
             }
         }
-        return (ModelView) mappedMethod.invoke(instance, parameterValue.values().toArray());
+        Object[] args = this.get_ordened_args(mappedMethod, parameterValue);
+        for(Object arg : args) System.out.println(arg);
+        return mappedMethod.invoke(instance, args);
     }
 
-    public ModelView get_model_view(HttpServletRequest request) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    public Object get(HttpServletRequest request, HttpServletResponse response) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Mapping to_use = this.getRequestMapping(request);
+        if (to_use == null) {
+            throw new ServletException(String.format("No mapping entry find for %s", request.getServletPath()));
+        }
         Object instance = this.init_mapped_class(request, to_use);
-        return this.invoke_method(instance, to_use.getMappedMethod(), request);
-        //return (ModelView) to_use.getMappedMethod().invoke(instance);
+        return this.invoke_method(instance, to_use.getMappedMethod(), request, response);
     }
 
     @Override
@@ -277,7 +307,5 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         }
         super.init(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
-    
-    
 
 }
