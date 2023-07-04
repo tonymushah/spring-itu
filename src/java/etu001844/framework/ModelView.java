@@ -6,11 +6,14 @@ package etu001844.framework;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
 
 /**
  *
@@ -18,7 +21,26 @@ import java.util.function.Function;
  */
 public class ModelView extends HashMap<String, Object> {
     private String url;
+    private Set<Cookie> cookie;
+    private HashMap<String, String> headers;
 
+    public Set<Cookie> getCookie() {
+        return cookie;
+    }
+
+    public void setCookie(Set<Cookie> cookie) {
+        this.cookie = cookie;
+    }
+    
+
+    public HashMap<String, String> getHeaders() {
+        return headers;
+    }
+
+    public void setHeaders(HashMap<String, String> headers) {
+        this.headers = headers;
+    }
+    
     public String getUrl() {
         return url;
     }
@@ -32,11 +54,15 @@ public class ModelView extends HashMap<String, Object> {
     }
 
     public ModelView() {
+        this.setHeaders(new HashMap());
+        this.setCookie(new HashSet());
     }
 
     public ModelView(String url, Map<? extends String, ? extends Object> m) {
         super(m);
         this.setUrl(url);
+        this.setHeaders(new HashMap());
+        this.setCookie(new HashSet());
     }
 
     @Override

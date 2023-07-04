@@ -4,6 +4,7 @@
  */
 package etu001844.framework.servlet;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import etu001844.framework.Mapping;
 import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.Controller;
@@ -19,6 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import mg.tonymushah.utils.ClassUtils;
@@ -30,6 +32,16 @@ import mg.tonymushah.utils.ClassUtils;
 @WebServlet(name = "FrontServlet", urlPatterns = {"*.do"})
 public class FrontServlet extends AbstractFrontServlet {
 
+    protected ObjectMapper mapper;
+
+    public ObjectMapper getMapper() {
+        return mapper;
+    }
+
+    public void setMapper(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
+
     @Override
     public void init() throws ServletException {
         super.init();
@@ -40,8 +52,8 @@ public class FrontServlet extends AbstractFrontServlet {
             HashMap<Method, ArrayList<RequestMapping>> methods;
             methods = ClassUtils.findAllMethodOfPackageByClassAnnotation(this.findAllClasses(), RequestMapping.class);
             for (Map.Entry<Method, ArrayList<RequestMapping>> entry : methods.entrySet()) {
-                String url = entry.getValue().get(0).url();
-                if (entry.getKey().getReturnType() == ModelView.class) {
+                for (RequestMapping requestMapping : entry.getValue()) {
+                    String url = requestMapping.url();
                     Class<?> mappingClass = entry.getKey().getDeclaringClass();
                     if (mappingClass.isAnnotationPresent(Controller.class)) {
                         url = mappingClass.getDeclaredAnnotation(Controller.class).url() + url;
@@ -53,7 +65,7 @@ public class FrontServlet extends AbstractFrontServlet {
         } catch (ClassNotFoundException ex) {
             throw new ServletException(ex.getMessage(), ex.getCause());
         }
-        super.init();
+        this.setMapper(new ObjectMapper());
     }
 
     /**
@@ -68,11 +80,32 @@ public class FrontServlet extends AbstractFrontServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            ModelView to_use_of_to_use = this.get_model_view(request);
-            for (Map.Entry<String, Object> data : to_use_of_to_use.entrySet()) {
-                request.setAttribute(data.getKey(), data.getValue());
+            Object to_use = this.get(request, response);
+            if (to_use instanceof ModelView) {
+                ModelView to_use_of_to_use = (ModelView) to_use;
+                for (Map.Entry<String, Object> data : to_use_of_to_use.entrySet()) {
+                    request.setAttribute(data.getKey(), data.getValue());
+                }
+                if (to_use_of_to_use.getCookie() != null) {
+                    if (to_use_of_to_use.getCookie().isEmpty() == false) {
+                        for (Cookie cookie : to_use_of_to_use.getCookie()) {
+                            response.addCookie(cookie);
+                        }
+                    }
+                }
+                if (to_use_of_to_use.getHeaders() != null) {
+                    if (to_use_of_to_use.getHeaders().isEmpty() == false) {
+                        for (Map.Entry<String, String> header : to_use_of_to_use.getHeaders().entrySet()) {
+                            response.addHeader(header.getKey(), header.getValue());
+                        }
+                    }
+                }
+
+                this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
+            } else {
+                this.getMapper().writeValue(response.getOutputStream(), to_use);
+                response.setContentType("application/json");
             }
-            this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
 
         } catch (NoSuchMethodException ex) {
             Logger.getLogger(FrontServlet.class.getName()).log(Level.SEVERE, null, ex);

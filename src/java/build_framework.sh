@@ -1,6 +1,6 @@
 #!/bin/bash
 
-class_path=".:../../../../apache-tomcat-9.0.75/lib/*"
+class_path=".:../../../../apache-tomcat-9.0.75/lib/*:../../lib/*"
 output_dir="to_jar"
 output_jar_fileName="etu001844_spring_framework.jar"
 testFrameworkPath="../../testFramework"
