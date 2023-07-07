@@ -23,7 +23,16 @@ public class ModelView extends HashMap<String, Object> {
     private String url;
     private Set<Cookie> cookie;
     private HashMap<String, String> headers;
+    private boolean isJson = false;
 
+    public boolean isIsJson() {
+        return isJson;
+    }
+
+    public void setIsJson(boolean isJson) {
+        this.isJson = isJson;
+    }
+    
     public Set<Cookie> getCookie() {
         return cookie;
     }
@@ -65,9 +74,12 @@ public class ModelView extends HashMap<String, Object> {
         this.setCookie(new HashSet());
     }
 
-    @Override
-    public Object clone() {
-        return super.clone(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    public HashMap<String, Object> getData(){
+        return this;
+    }
+    
+    public HashMap<String, Object> cloneData(){
+        return (HashMap<String, Object>) super.clone();
     }
 
     @Override
