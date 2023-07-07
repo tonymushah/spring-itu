@@ -7,6 +7,7 @@ package etu001844.framework.servlet;
 import etu001844.framework.Mapping;
 import etu001844.framework.ModelView;
 import etu001844.framework.bind.annotations.CreateIfNull;
+import etu001844.framework.bind.annotations.JSONResponse;
 import etu001844.framework.bind.annotations.Scope;
 import etu001844.framework.bind.annotations.SkipMapping;
 import etu001844.framework.bind.enums.ScopeValue;
@@ -212,9 +213,8 @@ public abstract class AbstractFrontServlet extends HttpServlet {
         }
         return args;
     }
-    // TODO Test 
-    public Object invoke_method(Object instance, Method mappedMethod, HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InvocationTargetException {
-        HashMap<Parameter, Object> parameterValue = new HashMap();
+    public HashMap<Parameter, Object> get_hash_parameter(Method mappedMethod, HttpServletRequest request, HttpServletResponse response){
+    HashMap<Parameter, Object> parameterValue = new HashMap();
         HashMap<String, Parameter> methodParam = this.get_method_param(mappedMethod);
         for (Map.Entry<String, Parameter> param : methodParam.entrySet()) {
             System.out.println(param.getKey());
@@ -274,18 +274,31 @@ public abstract class AbstractFrontServlet extends HttpServlet {
                 }
             }
         }
+        return parameterValue;
+    }
+    // TODO Test 
+    public Object invoke_method(Object instance, Method mappedMethod, HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, InvocationTargetException {
+        HashMap<Parameter, Object> parameterValue = this.get_hash_parameter(mappedMethod, request, response);
         Object[] args = this.get_ordened_args(mappedMethod, parameterValue);
-        for(Object arg : args) System.out.println(arg);
         return mappedMethod.invoke(instance, args);
     }
-
+    private Object verify_if_json(Object instance, Method mappedMethod){
+        if(instance instanceof ModelView){
+            ModelView mv = (ModelView) instance;
+            if(mappedMethod.isAnnotationPresent(JSONResponse.class)){
+                mv.setIsJson(true);
+            }
+        }
+        return instance;
+    }
     public Object get(HttpServletRequest request, HttpServletResponse response) throws ServletException, NoSuchMethodException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         Mapping to_use = this.getRequestMapping(request);
         if (to_use == null) {
             throw new ServletException(String.format("No mapping entry find for %s", request.getServletPath()));
         }
         Object instance = this.init_mapped_class(request, to_use);
-        return this.invoke_method(instance, to_use.getMappedMethod(), request, response);
+        Method mappedMethod = to_use.getMappedMethod();
+        return this.verify_if_json(this.invoke_method(instance, mappedMethod, request, response), mappedMethod);
     }
 
     @Override

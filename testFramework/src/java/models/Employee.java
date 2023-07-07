@@ -1,9 +1,13 @@
 package models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import etu001844.framework.ModelView;
+import etu001844.framework.bind.annotations.JSONResponse;
 import etu001844.framework.bind.annotations.RequestMapping;
 import etu001844.framework.bind.annotations.SkipMapping;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,5 +69,19 @@ public class Employee {
             System.out.println("request is null");
         }
         return storage.getEmployees();
+    }
+    @RequestMapping(url = "/json")
+    @JsonIgnore
+    @JSONResponse
+    public ModelView getSubmited(){
+        ModelView mv = new ModelView();
+        List<Employee> list = new ArrayList();
+        list.add(new Employee("dasdas", "dadasdasdsadsa"));
+        list.add(new Employee());
+        list.add(new Employee("Rad", "dar"));
+        mv.put("data", list);
+        mv.put("context", 90.f);
+        mv.setUrl("/index.jsp");
+        return mv;
     }
 }

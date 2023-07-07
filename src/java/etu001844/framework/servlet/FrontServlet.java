@@ -77,34 +77,48 @@ public class FrontServlet extends AbstractFrontServlet {
      * @throws ServletException if a servlet-specific error occurs
      * @throws IOException if an I/O error occurs
      */
+    protected void processModelView(ModelView to_use_of_to_use, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        
+        if (to_use_of_to_use.getCookie() != null) {
+            if (to_use_of_to_use.getCookie().isEmpty() == false) {
+                for (Cookie cookie : to_use_of_to_use.getCookie()) {
+                    response.addCookie(cookie);
+                }
+            }
+        }
+        if (to_use_of_to_use.getHeaders() != null) {
+            if (to_use_of_to_use.getHeaders().isEmpty() == false) {
+                for (Map.Entry<String, String> header : to_use_of_to_use.getHeaders().entrySet()) {
+                    response.addHeader(header.getKey(), header.getValue());
+                }
+            }
+        }
+        if (to_use_of_to_use.isIsJson() && to_use_of_to_use.getUrl() != null) {
+            HashMap<String, Object> data = to_use_of_to_use.getData();
+            response.setContentType("application/json");
+            this.getMapper().writeValue(response.getOutputStream(), data);
+        }else if(to_use_of_to_use.isIsJson() && to_use_of_to_use.getUrl() == null){
+            HashMap<String, Object> data = to_use_of_to_use.getData();
+            response.setContentType("application/json");
+            this.getMapper().writeValue(response.getOutputStream(), data);
+        }else{
+            for (Map.Entry<String, Object> data : to_use_of_to_use.entrySet()) {
+                request.setAttribute(data.getKey(), data.getValue());
+            }
+            this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
+        }
+    }
+
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
             Object to_use = this.get(request, response);
             if (to_use instanceof ModelView) {
-                ModelView to_use_of_to_use = (ModelView) to_use;
-                for (Map.Entry<String, Object> data : to_use_of_to_use.entrySet()) {
-                    request.setAttribute(data.getKey(), data.getValue());
-                }
-                if (to_use_of_to_use.getCookie() != null) {
-                    if (to_use_of_to_use.getCookie().isEmpty() == false) {
-                        for (Cookie cookie : to_use_of_to_use.getCookie()) {
-                            response.addCookie(cookie);
-                        }
-                    }
-                }
-                if (to_use_of_to_use.getHeaders() != null) {
-                    if (to_use_of_to_use.getHeaders().isEmpty() == false) {
-                        for (Map.Entry<String, String> header : to_use_of_to_use.getHeaders().entrySet()) {
-                            response.addHeader(header.getKey(), header.getValue());
-                        }
-                    }
-                }
-
-                this.getServletContext().getRequestDispatcher(to_use_of_to_use.getUrl()).forward(request, response);
+                ModelView mv = (ModelView) to_use;
+                this.processModelView(mv, request, response);
             } else {
-                this.getMapper().writeValue(response.getOutputStream(), to_use);
                 response.setContentType("application/json");
+                this.getMapper().writeValue(response.getOutputStream(), to_use);
             }
 
         } catch (NoSuchMethodException ex) {
@@ -123,33 +137,49 @@ public class FrontServlet extends AbstractFrontServlet {
 
     }
 
-    // <editor-fold defaultstate="collapsed" desc="HttpServlet methods. Click on the + sign on the left to edit the code.">
-    /**
-     * Handles the HTTP <code>GET</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    public void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
     }
 
-    /**
-     * Handles the HTTP <code>POST</code> method.
-     *
-     * @param request servlet request
-     * @param response servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
-     */
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
-        processRequest(request, response);
+    public void doTrace(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
+    }
+
+    @Override
+    public void doOptions(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
+    }
+
+    @Override
+    public void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
+    }
+
+    @Override
+    public void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
+    }
+
+    @Override
+    public void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
+    }
+
+    @Override
+    public void doHead(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
+    }
+
+    @Override
+    public long getLastModified(HttpServletRequest req) {
+        return super.getLastModified(req); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    }
+
+    @Override
+    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        this.processRequest(req, resp);
     }
 
     /**
